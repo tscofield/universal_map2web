@@ -123,6 +123,10 @@ def generer_export(dialog, export_data, output_dir, locale=None, wms_layers=None
     """Génère index.html, style.css et app.js dans output_dir à partir des templates
     statiques et des réglages du dialogue. `export_data` est le dict couche -> métadonnées
     produit par l'export (fichier geojson, styles de légende, champs popup, étiquettes...).
+
+    Toute valeur d'attribut qui est une URL d'image absolue (commence par http et
+    finit par .jpg) est rendue comme miniature cliquable dans les popups et la
+    table attributaire.
     """
 
     titre = (

@@ -556,9 +556,11 @@ function construireLayer(nom, info, data, activerCluster) {
                 + '<table class="custom-popup-table">';
             (info.popup_fields || []).forEach(function(key) {
                 if (feature.properties[key] !== undefined && !key.startsWith('_qgis_')) {
+                    var val = feature.properties[key];
+                    var cell = estPhotoUrl(val) ? photoHtml(val) : val;
                     content += '<tr>'
                         + '<td style="color:#4ecdc4;font-weight:600;">' + key + '</td>'
-                        + '<td style="text-align:right;">' + feature.properties[key] + '</td>'
+                        + '<td style="text-align:right;">' + cell + '</td>'
                         + '</tr>';
                 }
             });
@@ -887,7 +889,11 @@ function ouvrirTableAttributaire(nom) {
             var p = f.properties || {};
             champs.forEach(function(c) {
                 var td = document.createElement('td');
-                td.textContent = texteCellule(p[c]);
+                if (estPhotoUrl(p[c])) {
+                    td.innerHTML = photoHtml(p[c]);
+                } else {
+                    td.textContent = texteCellule(p[c]);
+                }
                 tr.appendChild(td);
             });
             tr.addEventListener('mouseenter', function(e) {
@@ -1199,6 +1205,21 @@ function echapperHtml(v) {
     return String(v === null || v === undefined ? '' : v)
         .replace(/&/g, '&amp;').replace(/</g, '&lt;')
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ── Photo thumbnails ─────────────────────────────────────────────
+// Any attribute value that is an absolute image URL (starts with http
+// and ends with .jpg) is rendered as a clickable thumbnail linking to
+// the full image. The exporter is responsible for producing the URLs.
+function estPhotoUrl(val) {
+    return typeof val === 'string' && val.indexOf('http') === 0
+        && val.toLowerCase().endsWith('.jpg');
+}
+
+function photoHtml(url) {
+    return '<a href="' + url + '" target="_blank" rel="noopener" class="photo-link">'
+        + '<img class="photo-thumb" src="' + url + '" alt="photo" loading="lazy">'
+        + '</a>';
 }
 
 function urlGetFeatureInfo(coucheWMS, latlng, infoFormat) {
