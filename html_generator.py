@@ -126,7 +126,8 @@ def generer_export(dialog, export_data, output_dir, locale=None, wms_layers=None
 
     Toute valeur d'attribut qui est une URL d'image absolue (commence par http et
     finit par .jpg) est rendue comme miniature cliquable dans les popups et la
-    table attributaire.
+    table attributaire ; un clic ouvre l'image complète dans une superposition
+    (lightbox) au lieu de naviguer vers l'URL.
     """
 
     titre = (

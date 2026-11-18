@@ -1209,18 +1209,55 @@ function echapperHtml(v) {
 
 // ── Photo thumbnails ─────────────────────────────────────────────
 // Any attribute value that is an absolute image URL (starts with http
-// and ends with .jpg) is rendered as a clickable thumbnail linking to
-// the full image. The exporter is responsible for producing the URLs.
+// and ends with .jpg) is rendered as a clickable thumbnail. Clicking
+// opens the full image in a lightbox overlay (navigating to the raw
+// file URL would trigger a download). The exporter is responsible for
+// producing the URLs.
 function estPhotoUrl(val) {
     return typeof val === 'string' && val.indexOf('http') === 0
         && val.toLowerCase().endsWith('.jpg');
 }
 
 function photoHtml(url) {
-    return '<a href="' + url + '" target="_blank" rel="noopener" class="photo-link">'
+    return '<a href="' + url + '" class="photo-link">'
         + '<img class="photo-thumb" src="' + url + '" alt="photo" loading="lazy">'
         + '</a>';
 }
+
+function ouvrirPhoto(url) {
+    var box = document.getElementById('photo-lightbox');
+    if (!box) {
+        box = document.createElement('div');
+        box.id = 'photo-lightbox';
+        box.className = 'lightbox';
+        box.innerHTML = '<div class="lightbox-close">&times;</div>'
+            + '<img class="lightbox-img" alt="photo">';
+        document.body.appendChild(box);
+        box.addEventListener('click', function(e) {
+            if (e.target === box || e.target.classList.contains('lightbox-close')) {
+                fermerPhoto();
+            }
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') fermerPhoto();
+        });
+    }
+    box.querySelector('.lightbox-img').src = url;
+    box.classList.add('open');
+}
+
+function fermerPhoto() {
+    var box = document.getElementById('photo-lightbox');
+    if (box) box.classList.remove('open');
+}
+
+document.addEventListener('click', function(e) {
+    var a = e.target.closest ? e.target.closest('a.photo-link') : null;
+    if (a) {
+        e.preventDefault();
+        ouvrirPhoto(a.getAttribute('href'));
+    }
+});
 
 function urlGetFeatureInfo(coucheWMS, latlng, infoFormat) {
     var crs = map.options.crs;
