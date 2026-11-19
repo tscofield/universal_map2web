@@ -5,6 +5,7 @@ injection du style QGIS résolu par entité (utile pour un rendu Leaflet fidèle
 """
 
 import json
+from datetime import date, datetime
 
 from qgis.core import (
     QgsCoordinateReferenceSystem,
@@ -17,6 +18,21 @@ from .styles import (
     lookup_style,
     normaliser_valeur_classification,
 )
+
+
+def _serialiser_valeur(val):
+    """Sérialise une valeur d'attribut en chaîne pour le GeoJSON.
+
+    Les objets date/datetime sont rendus en ISO 8601 (ex. 2026-11-18T12:36:58
+    ou 2026-11-18) plutôt que via str() (qui donnerait
+    '2026-11-18 12:36:58.123456'), pour un GeoJSON propre et triable. Les
+    autres valeurs passent par str().
+    """
+    if val is None:
+        return ""
+    if isinstance(val, (date, datetime)):
+        return val.isoformat()
+    return str(val)
 
 
 def layer_to_geojson(
@@ -56,8 +72,7 @@ def layer_to_geojson(
             )
             for field_name in champs_a_exporter:
                 if layer.fields().indexOf(field_name) != -1:
-                    val = feature[field_name]
-                    props[field_name] = str(val) if val is not None else ""
+                    props[field_name] = _serialiser_valeur(feature[field_name])
 
             val_classe = (
                 normaliser_valeur_classification(feature[attribut_classification])
