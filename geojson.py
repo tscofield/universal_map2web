@@ -24,12 +24,22 @@ def _serialiser_valeur(val):
     """Sérialise une valeur d'attribut en chaîne pour le GeoJSON.
 
     Les objets date/datetime sont rendus en ISO 8601 (ex. 2026-11-18T12:36:58
-    ou 2026-11-18) plutôt que via str() (qui donnerait
-    '2026-11-18 12:36:58.123456'), pour un GeoJSON propre et triable. Les
-    autres valeurs passent par str().
+    ou 2026-11-18) plutôt que via str(). QGIS renvoie les champs date/datetime
+    sous forme d'objets PyQt5 (QDateTime/QDate), pas de datetime Python : on
+    les convertit d'abord via toPyDateTime()/toPyDate() (détection par
+    attribut, sans import PyQt5) pour que isoformat() s'applique. Les autres
+    valeurs passent par str().
     """
     if val is None:
         return ""
+    # QGIS hands date/datetime fields back as PyQt5 QDateTime/QDate objects.
+    # Convert to a Python date/datetime so isoformat() applies. Check
+    # toPyDateTime first so a QDateTime is not truncated to a date.
+    for conv in ("toPyDateTime", "toPyDate"):
+        fn = getattr(val, conv, None)
+        if callable(fn):
+            val = fn()
+            break
     if isinstance(val, (date, datetime)):
         return val.isoformat()
     return str(val)
